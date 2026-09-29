@@ -9,6 +9,7 @@ A pass is built on **volume of boxes + solid methodology + clean notes**, not on
 - Get accounts: **PEN-200** (if enrolled), **Hack The Box** (VIP for retired boxes + writeups), **Proving Grounds Practice**.
 
 ## Phase 1 — Fundamentals (weeks 1–4)
+- Pick a structured course — see [`../resources/learning-courses.md`](../resources/learning-courses.md) (HTB Academy PT path or TCM PEH) — and do **HTB Starting Point** in parallel.
 - Work the **PEN-200 course material + exercises** if enrolled. Otherwise use HTB Academy modules (Footprinting, Web, Privesc paths).
 - Drill each topic doc here against 1–2 easy boxes:
   - Enumeration → do 5 easy boxes focusing only on thorough enum.

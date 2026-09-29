@@ -35,7 +35,7 @@ Open [`dashboard.html`](dashboard.html) in any browser (double-click it — no s
 | [`10-buffer-overflow/`](10-buffer-overflow/buffer-overflow.md) | Stack BOF workflow (de-emphasized on the exam, but free points if it appears) |
 | [`practice/`](practice/study-plan.md) | 90-day study plan, **[curated box list by topic](practice/box-list.md)**, box tracker, per-box note template |
 | [`cheatsheets/`](cheatsheets/quick-reference.md) | One-page command quick reference |
-| [`resources/`](resources/resources.md) | Curated links, tools, box lists (TJnull), reading |
+| [`resources/`](resources/resources.md) | Curated links, tools, box lists (TJnull), reading, **[best courses to get started](resources/learning-courses.md)** |
 
 ## 🗂️ Repository structure
 
@@ -76,7 +76,8 @@ Oscar/
 │   ├── box-tracker.md            log every box
 │   └── box-note-template.md      copy per box
 └── resources/
-    └── resources.md              TJnull list · HackTricks · GTFOBins · tools
+    ├── resources.md              TJnull list · HackTricks · GTFOBins · tools
+    └── learning-courses.md       best courses for easy/medium HTB (+ 8-week plan)
 ```
 
 ## ✅ The one-sentence method

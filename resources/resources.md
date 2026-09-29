@@ -2,6 +2,8 @@
 
 Curated, high-signal links for OSCP prep. Verify anything time-sensitive against the official OffSec docs.
 
+> 📘 **New here?** See [`learning-courses.md`](learning-courses.md) for the best courses to get ready for easy/medium HTB boxes, with an 8-week plan.
+
 ## Official (authoritative)
 - **OSCP Exam Guide** — https://help.offsec.com/hc/en-us/articles/360040165632-OSCP-Exam-Guide
 - **OSCP Exam FAQ** — https://help.offsec.com/hc/en-us/articles/4412170923924-OSCP-Exam-FAQ
