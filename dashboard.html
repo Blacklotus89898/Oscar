@@ -68,6 +68,24 @@
   .muted{color:var(--muted)}
   .tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
   .note{background:var(--panel2);border-left:3px solid var(--warn);padding:10px 14px;border-radius:8px;font-size:13px;margin:12px 0}
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+  .filters button{background:var(--chip);color:var(--muted);border:1px solid var(--border);padding:5px 12px;border-radius:16px;cursor:pointer;font-size:12px;font-weight:600}
+  .filters button.on{background:var(--accent2);color:#04182e;border-color:var(--accent2)}
+  .phase{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin:14px 0;overflow:hidden}
+  .phase > .ph{margin:0;padding:12px 16px;background:var(--panel2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:var(--accent2)}
+  .phase > .ph .pc{font-size:12px;color:var(--muted);font-weight:600}
+  .pbar{height:6px;background:var(--bg);overflow:hidden}
+  .pbar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .2s}
+  .phase .pbody{padding:4px 16px 10px}
+  .brow{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .brow:last-child{border-bottom:none}
+  .brow.done .bn{color:var(--muted);text-decoration:line-through}
+  .brow .bn{font-weight:600;min-width:110px}
+  .brow .bnote{color:var(--muted);font-size:12px;flex:1}
+  .os{font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
+  .os.Linux{color:var(--accent);border-color:var(--accent)}
+  .os.Win{color:var(--accent2);border-color:var(--accent2)}
+  .os.AD{color:var(--warn);border-color:var(--warn)}
   @media(max-width:720px){.addrow{grid-template-columns:1fr 1fr;}.stat{font-size:26px}}
 </style>
 </head>
@@ -78,6 +96,7 @@
     <div class="sub">Local progress tracker · saves in your browser · target: 70/100 to pass</div>
     <nav id="nav">
       <button data-tab="dash" class="active">Dashboard</button>
+      <button data-tab="path">Learning Path</button>
       <button data-tab="boxes">Box Tracker</button>
       <button data-tab="check">Checklist</button>
       <button data-tab="cheat">Cheatsheet</button>
@@ -94,6 +113,7 @@
     <div class="card"><div class="stat" id="s-ad">0<small>/10</small></div><div class="label">AD chains done</div><div class="bar"><i id="b-ad"></i></div></div>
     <div class="card"><div class="stat" id="s-unaided">0</div><div class="label">Rooted unaided</div></div>
     <div class="card"><div class="stat" id="s-total">0</div><div class="label">Total boxes logged</div></div>
+    <div class="card"><div class="stat" id="s-path">0<small>/0</small></div><div class="label">Learning path done</div><div class="bar"><i id="b-path"></i></div></div>
   </div>
 
   <h2>Exam readiness</h2>
@@ -151,6 +171,19 @@
   <p class="muted" id="ad-empty">No AD chains yet — this is 40% of the exam, prioritize it.</p>
 </section>
 
+<!-- ============ LEARNING PATH ============ -->
+<section id="path">
+  <h2>Learning path — boxes by skill</h2>
+  <div class="note">Work top to bottom. Tick a box when you've rooted it <b>unaided</b>. Progress saves in your browser. Full detail + writeup links in <span class="mono">practice/box-list.md</span>. Curated from TJnull's list (Jul 2026) + classic starters.</div>
+  <div class="card" style="margin-bottom:6px">
+    <div class="label">Overall path progress</div>
+    <div class="stat" id="path-stat" style="font-size:24px">0 / 0</div>
+    <div class="bar"><i id="path-bar"></i></div>
+  </div>
+  <div class="filters" id="path-filters"></div>
+  <div id="path-list"></div>
+</section>
+
 <!-- ============ CHECKLIST ============ -->
 <section id="check">
   <h2>Per-target checklist</h2>
@@ -178,6 +211,8 @@ let boxes = LS.get('oscp-boxes',[]);
 let ads   = LS.get('oscp-ads',[]);
 let checks= LS.get('oscp-checks',{});
 let ready = LS.get('oscp-ready',{});
+let pathDone = LS.get('oscp-path',{});
+let pathFilter = 'All';
 
 /* ---------- tabs ---------- */
 document.getElementById('nav').addEventListener('click',e=>{
@@ -261,8 +296,118 @@ function updateStats(){
   document.getElementById('s-total').textContent=boxes.length+ads.length;
   document.getElementById('b-standalone').style.width=Math.min(100,st/50*100)+'%';
   document.getElementById('b-ad').style.width=Math.min(100,ad/10*100)+'%';
+  const pt=pathTotals();
+  set('s-path',pt.done,'/'+pt.total);
+  document.getElementById('b-path').style.width=(pt.total?pt.done/pt.total*100:0)+'%';
 }
 function set(id,n,suf){document.getElementById(id).innerHTML=n+(suf?`<small>${suf}</small>`:'')}
+
+/* ---------- learning path ---------- */
+const PATH=[
+ {name:'1 · Foundations (warm-ups)',boxes:[
+   {n:'Lame',p:'HTB',o:'Linux',t:'Samba RCE'},{n:'Blue',p:'HTB',o:'Win',t:'EternalBlue'},
+   {n:'Legacy',p:'HTB',o:'Win',t:'MS08-067'},{n:'Devel',p:'HTB',o:'Win',t:'FTP webshell → kernel'},
+   {n:'Jerry',p:'HTB',o:'Win',t:'Tomcat WAR shell'},{n:'Netmon',p:'HTB',o:'Win',t:'PRTG creds'},
+   {n:'Optimum',p:'HTB',o:'Win',t:'HFS RCE → kernel'},{n:'Bashed',p:'HTB',o:'Linux',t:'phpbash → sudo'},
+   {n:'Shocker',p:'HTB',o:'Linux',t:'Shellshock'},{n:'Nibbles',p:'HTB',o:'Linux',t:'Nibbleblog → sudo'},
+   {n:'Twiggy',p:'PGP',o:'Linux',t:'Salt-API RCE'},{n:'Astronaut',p:'PGP',o:'Linux',t:'GLPI web'},
+ ]},
+ {name:'2 · Web-app footholds',boxes:[
+   {n:'Networked',p:'HTB',o:'Linux',t:'upload bypass → cron'},{n:'CozyHosting',p:'HTB',o:'Linux',t:'Spring actuator'},
+   {n:'BoardLight',p:'HTB',o:'Linux',t:'Dolibarr CVE'},{n:'Editorial',p:'HTB',o:'Linux',t:'SSRF → git'},
+   {n:'Usage',p:'HTB',o:'Linux',t:'Laravel SQLi'},{n:'Builder',p:'HTB',o:'Linux',t:'Jenkins'},
+   {n:'LinkVortex',p:'HTB',o:'Linux',t:'Ghost CMS'},{n:'Dog',p:'HTB',o:'Linux',t:'Backdrop CMS'},
+   {n:'Sau',p:'HTB',o:'Linux',t:'request-baskets SSRF'},{n:'Broker',p:'HTB',o:'Linux',t:'ActiveMQ CVE'},
+   {n:'Magic',p:'HTB',o:'Linux',t:'SQLi + upload'},{n:'PC',p:'PGP',o:'Linux',t:'gRPC'},
+   {n:'Levram',p:'PGP',o:'Linux',t:'eLabFTW'},{n:'Blogger',p:'PGPlay',o:'Linux',t:'WordPress'},
+   {n:'Loly',p:'PGPlay',o:'Linux',t:'WordPress upload'},
+ ]},
+ {name:'3 · Linux privilege escalation',boxes:[
+   {n:'Busqueda',p:'HTB',o:'Linux',t:'sudo script + Gitea'},{n:'UpDown',p:'HTB',o:'Linux',t:'git vhost → sudo'},
+   {n:'Help',p:'HTB',o:'Linux',t:'kernel / sudo'},{n:'Monitored',p:'HTB',o:'Linux',t:'SNMP creds → sudo'},
+   {n:'Keeper',p:'HTB',o:'Linux',t:'KeePass → SSH key'},{n:'Titanic',p:'HTB',o:'Linux',t:'Gitea → root proc'},
+   {n:'Editor',p:'HTB',o:'Linux',t:'XWiki'},{n:'Exfiltrated',p:'PGP',o:'Linux',t:'Subrion → cron'},
+   {n:'Pelican',p:'PGP',o:'Linux',t:'exiftool'},{n:'Boolean',p:'PGP',o:'Linux',t:'capabilities'},
+   {n:'Codo',p:'PGP',o:'Linux',t:'sudo chain'},{n:'Scrutiny',p:'PGP',o:'Linux',t:'cred reuse'},
+   {n:'SoSimple',p:'PGPlay',o:'Linux',t:'sudo/SUID'},{n:'Seppuku',p:'PGPlay',o:'Linux',t:'cron/SUID'},
+ ]},
+ {name:'4 · Windows privilege escalation',boxes:[
+   {n:'Servmon',p:'HTB',o:'Win',t:'NSClient++'},{n:'Support',p:'HTB',o:'Win',t:'LDAP → RBCD'},
+   {n:'StreamIO',p:'HTB',o:'Win',t:'SQLi → LAPS'},{n:'Jeeves',p:'HTB',o:'Win',t:'Jenkins → KeePass'},
+   {n:'Access',p:'HTB',o:'Win',t:'stored creds / runas'},{n:'Heist',p:'HTB',o:'Win',t:'cmdkey creds'},
+   {n:'Algernon',p:'PGP',o:'Win',t:'Smasher service'},{n:'Kevin',p:'PGP',o:'Win',t:'GOM service'},
+   {n:'Authby',p:'PGP',o:'Win',t:'FTP creds'},{n:'Craft',p:'PGP',o:'Win',t:'service hijack'},
+   {n:'Jacko',p:'PGP',o:'Win',t:'service hijack'},{n:'Slort',p:'PGP',o:'Win',t:'unquoted path'},
+   {n:'MedJed',p:'PGP',o:'Win',t:'service'},{n:'Nickel',p:'PGP',o:'Win',t:'cred reuse'},
+   {n:'Shenzi',p:'PGP',o:'Win',t:'XAMPP'},{n:'DVR4',p:'PGP',o:'Win',t:'Argus service'},
+ ]},
+ {name:'5 · Buffer overflow (optional)',boxes:[
+   {n:'Brainpan',p:'HTB',o:'Win',t:'classic 32-bit BOF'},{n:'Buff',p:'HTB',o:'Win',t:'CloudMe BOF'},
+   {n:'Kyoto',p:'PGP',o:'Win',t:'tagged Win BOF'},
+ ]},
+ {name:'6 · Active Directory ⭐ (40% of exam)',boxes:[
+   {n:'Active',p:'HTB',o:'AD',t:'GPP + Kerberoast'},{n:'Forest',p:'HTB',o:'AD',t:'AS-REP → DCSync'},
+   {n:'Sauna',p:'HTB',o:'AD',t:'AS-REP → DCSync'},{n:'Monteverde',p:'HTB',o:'AD',t:'Azure AD Connect'},
+   {n:'Cascade',p:'HTB',o:'AD',t:'AD Recycle Bin'},{n:'Blackfield',p:'HTB',o:'AD',t:'AS-REP → Backup Op'},
+   {n:'Timelapse',p:'HTB',o:'AD',t:'PFX → LAPS'},{n:'Return',p:'HTB',o:'AD',t:'printer → Server Op'},
+   {n:'Intelligence',p:'HTB',o:'AD',t:'gMSA + RBCD'},{n:'Escape',p:'HTB',o:'AD',t:'AD CS (ESC)'},
+   {n:'Certified',p:'HTB',o:'AD',t:'AD CS'},{n:'Cicada',p:'HTB',o:'AD',t:'single AD set'},
+   {n:'Manager',p:'HTB',o:'AD',t:'MSSQL → AD CS'},{n:'Administrator',p:'HTB',o:'AD',t:'single AD set'},
+   {n:'Vault',p:'PGP',o:'AD',t:'PGP AD'},{n:'Resourced',p:'PGP',o:'AD',t:'RBCD'},
+   {n:'Nagoya',p:'PGP',o:'AD',t:'foothold → DA'},
+ ]},
+ {name:'7 · Pivoting & multi-host chains',boxes:[
+   {n:'Baby',p:'VL',o:'AD',t:'small AD chain'},{n:'Breach',p:'VL',o:'AD',t:'AD chain'},
+   {n:'Sendai',p:'VL',o:'AD',t:'AD chain'},{n:'Hybrid',p:'VL',o:'AD',t:'multi-box chain'},
+   {n:'Lustrous',p:'VL',o:'AD',t:'multi-box chain'},{n:'Dante',p:'HTB',o:'Lab',t:'Pro Lab network'},
+   {n:'GOAD',p:'Self',o:'AD',t:'free self-host AD lab'},
+ ]},
+ {name:'8 · Exam simulation',boxes:[
+   {n:'OSCP-A',p:'PEN-200',o:'Lab',t:'Challenge Lab'},{n:'OSCP-B',p:'PEN-200',o:'Lab',t:'Challenge Lab'},
+   {n:'OSCP-C',p:'PEN-200',o:'Lab',t:'Challenge Lab'},{n:'Osaka',p:'PGP',o:'Win',t:'challenge'},
+   {n:'Nara',p:'PGP',o:'AD',t:'challenge AD'},{n:'Mentor',p:'HTB',o:'Linux',t:'challenge'},
+   {n:'Authority',p:'HTB',o:'AD',t:'challenge AD'},{n:'Rebound',p:'HTB',o:'AD',t:'hard AD'},
+ ]},
+];
+const PLATS=['All','HTB','PGP','PGPlay','VL','PEN-200','Self'];
+function pkey(pi,b){return pi+'::'+b.n+'::'+b.p}
+function pathTotals(){let d=0,t=0;PATH.forEach((ph,pi)=>ph.boxes.forEach(b=>{t++;if(pathDone[pkey(pi,b)])d++}));return{done:d,total:t}}
+function renderFilters(){
+  const el=document.getElementById('path-filters');el.innerHTML='';
+  PLATS.forEach(p=>{
+    const b=document.createElement('button');b.textContent=p;if(p===pathFilter)b.classList.add('on');
+    b.onclick=()=>{pathFilter=p;renderPath()};el.appendChild(b);
+  });
+}
+function renderPath(){
+  renderFilters();
+  const el=document.getElementById('path-list');el.innerHTML='';
+  PATH.forEach((ph,pi)=>{
+    const vis=ph.boxes.filter(b=>pathFilter==='All'||b.p===pathFilter);
+    if(!vis.length)return;
+    const done=ph.boxes.filter(b=>pathDone[pkey(pi,b)]).length, tot=ph.boxes.length;
+    const div=document.createElement('div');div.className='phase';
+    div.innerHTML=`<div class="ph"><span>${esc(ph.name)}</span><span class="pc">${done}/${tot}</span></div>
+      <div class="pbar"><i style="width:${tot?done/tot*100:0}%"></i></div><div class="pbody"></div>`;
+    const body=div.querySelector('.pbody');
+    vis.forEach(b=>{
+      const key=pkey(pi,b), on=!!pathDone[key];
+      const row=document.createElement('div');row.className='brow'+(on?' done':'');
+      row.innerHTML=`<input type="checkbox" ${on?'checked':''}>
+        <span class="bn">${esc(b.n)}</span><span class="pill">${b.p}</span>
+        <span class="os ${b.o}">${b.o}</span><span class="bnote">${esc(b.t)}</span>`;
+      row.querySelector('input').addEventListener('change',e=>{
+        if(e.target.checked)pathDone[key]=true;else delete pathDone[key];
+        LS.set('oscp-path',pathDone);renderPath();updateStats();
+      });
+      body.appendChild(row);
+    });
+    el.appendChild(div);
+  });
+  const pt=pathTotals();
+  document.getElementById('path-stat').textContent=pt.done+' / '+pt.total;
+  document.getElementById('path-bar').style.width=(pt.total?pt.done/pt.total*100:0)+'%';
+}
 
 /* ---------- checklist ---------- */
 const checklist={
@@ -318,7 +463,7 @@ function renderCheat(){
 
 /* ---------- import/export/reset ---------- */
 function exportData(){
-  const data={boxes,ads,checks,ready,exported:new Date().toISOString()};
+  const data={boxes,ads,checks,ready,pathDone,exported:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='oscp-progress.json';a.click();
@@ -326,23 +471,23 @@ function exportData(){
 function importData(inp){
   const f=inp.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);
-    boxes=d.boxes||[];ads=d.ads||[];checks=d.checks||{};ready=d.ready||{};
-    LS.set('oscp-boxes',boxes);LS.set('oscp-ads',ads);LS.set('oscp-checks',checks);LS.set('oscp-ready',ready);
-    renderBoxes();renderAD();renderChecklist();renderReady();updateStats();
+    boxes=d.boxes||[];ads=d.ads||[];checks=d.checks||{};ready=d.ready||{};pathDone=d.pathDone||{};
+    LS.set('oscp-boxes',boxes);LS.set('oscp-ads',ads);LS.set('oscp-checks',checks);LS.set('oscp-ready',ready);LS.set('oscp-path',pathDone);
+    renderBoxes();renderAD();renderPath();renderChecklist();renderReady();updateStats();
     alert('Progress imported.');}catch(e){alert('Invalid file.')}};
   r.readAsText(f);
 }
 function resetAll(){if(confirm('Erase ALL saved progress? This cannot be undone.')){
-  ['oscp-boxes','oscp-ads','oscp-checks','oscp-ready'].forEach(k=>localStorage.removeItem(k));
-  boxes=[];ads=[];checks={};ready={};
-  renderBoxes();renderAD();renderChecklist();renderReady();updateStats();}}
+  ['oscp-boxes','oscp-ads','oscp-checks','oscp-ready','oscp-path'].forEach(k=>localStorage.removeItem(k));
+  boxes=[];ads=[];checks={};ready={};pathDone={};
+  renderBoxes();renderAD();renderPath();renderChecklist();renderReady();updateStats();}}
 
 /* ---------- utils ---------- */
 function v(id){return document.getElementById(id).value.trim()}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 /* ---------- init ---------- */
-renderBoxes();renderAD();renderChecklist();renderReady();renderCheat();updateStats();
+renderBoxes();renderAD();renderPath();renderChecklist();renderReady();renderCheat();updateStats();
 </script>
 </body>
 </html>
