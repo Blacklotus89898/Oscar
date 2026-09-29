@@ -37,6 +37,47 @@ Open [`dashboard.html`](dashboard.html) in any browser (double-click it — no s
 | [`cheatsheets/`](cheatsheets/quick-reference.md) | One-page command quick reference |
 | [`resources/`](resources/resources.md) | Curated links, tools, box lists (TJnull), reading |
 
+## 🗂️ Repository structure
+
+```
+Oscar/
+├── README.md                     ← you are here
+├── dashboard.html                ← interactive offline tracker (open in browser)
+├── 00-exam-guide/
+│   └── exam-guide.md             format · scoring · rules · exam-day strategy
+├── 01-methodology/
+│   ├── methodology.md            the attack loop + mindset
+│   └── checklist.md              per-target anti-panic checklist
+├── 02-enumeration/
+│   └── enumeration.md            nmap + every service
+├── 03-web/
+│   └── web-attacks.md            SQLi · LFI/RFI · upload · cmd injection
+├── 04-exploitation/
+│   └── shells-and-transfers.md   shells · TTY upgrade · msfvenom · transfers
+├── 05-privesc/
+│   ├── linux-privesc.md
+│   └── windows-privesc.md
+├── 06-active-directory/
+│   └── active-directory.md       BloodHound · Kerberoast · PtH · DCSync (40 pts)
+├── 07-pivoting/
+│   └── pivoting-tunneling.md     Ligolo-ng · Chisel · SSH · proxychains
+├── 08-password-attacks/
+│   └── password-attacks.md       hydra · hashcat · john · Responder
+├── 09-reporting/
+│   ├── report-template.md
+│   └── note-taking.md
+├── 10-buffer-overflow/
+│   └── buffer-overflow.md        32-bit stack BOF workflow
+├── cheatsheets/
+│   └── quick-reference.md        the one-pager
+├── practice/
+│   ├── study-plan.md             phased ~90-day plan
+│   ├── box-tracker.md            log every box
+│   └── box-note-template.md      copy per box
+└── resources/
+    └── resources.md              TJnull list · HackTricks · GTFOBins · tools
+```
+
 ## ✅ The one-sentence method
 
 > **Enumerate → find a foothold → get a shell → stabilize it → enumerate again as the new user → escalate → loot → pivot → repeat, writing down every command and every finding as you go.**
