@@ -1,0 +1,11 @@
+# Normalize line endings — keep LF in the repo, silence CRLF warnings on Windows
+* text=auto eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+
+# Treat these as binary (never convert)
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary

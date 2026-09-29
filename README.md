@@ -6,6 +6,10 @@
 
 Everything here is for **authorized security testing and education only**: your own lab, CTF platforms (HTB, PG Play/Practice, TryHackMe), and machines you have **explicit written permission** to test. Never point any of these techniques at systems you don't own or aren't contracted to assess. Unauthorized access is a crime in nearly every jurisdiction.
 
+## 🖥️ Interactive dashboard
+
+Open [`dashboard.html`](dashboard.html) in any browser (double-click it — no server needed) for a live tracker: box log, per-target checklist, exam-readiness meter, and a copy-paste cheatsheet. Progress saves in your browser; use its Export/Import buttons to back it up or move between machines.
+
 ## 🗺️ How to use this repo
 
 1. **Start with the exam guide** — understand what you're training for before you grind boxes.
@@ -28,6 +32,7 @@ Everything here is for **authorized security testing and education only**: your 
 | [`07-pivoting/`](07-pivoting/pivoting-tunneling.md) | Port forwarding, SSH tunnels, Chisel, Ligolo-ng, proxychains |
 | [`08-password-attacks/`](08-password-attacks/password-attacks.md) | Hydra, hashcat, john, wordlist generation, hash cracking |
 | [`09-reporting/`](09-reporting/report-template.md) | Report template + note-taking discipline |
+| [`10-buffer-overflow/`](10-buffer-overflow/buffer-overflow.md) | Stack BOF workflow (de-emphasized on the exam, but free points if it appears) |
 | [`practice/`](practice/study-plan.md) | 90-day study plan, box tracker, per-box note template |
 | [`cheatsheets/`](cheatsheets/quick-reference.md) | One-page command quick reference |
 | [`resources/`](resources/resources.md) | Curated links, tools, box lists (TJnull), reading |
