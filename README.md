@@ -33,7 +33,7 @@ Open [`dashboard.html`](dashboard.html) in any browser (double-click it — no s
 | [`08-password-attacks/`](08-password-attacks/password-attacks.md) | Hydra, hashcat, john, wordlist generation, hash cracking |
 | [`09-reporting/`](09-reporting/report-template.md) | Report template + note-taking discipline |
 | [`10-buffer-overflow/`](10-buffer-overflow/buffer-overflow.md) | Stack BOF workflow (de-emphasized on the exam, but free points if it appears) |
-| [`practice/`](practice/study-plan.md) | 90-day study plan, box tracker, per-box note template |
+| [`practice/`](practice/study-plan.md) | 90-day study plan, **[curated box list by topic](practice/box-list.md)**, box tracker, per-box note template |
 | [`cheatsheets/`](cheatsheets/quick-reference.md) | One-page command quick reference |
 | [`resources/`](resources/resources.md) | Curated links, tools, box lists (TJnull), reading |
 
@@ -72,6 +72,7 @@ Oscar/
 │   └── quick-reference.md        the one-pager
 ├── practice/
 │   ├── study-plan.md             phased ~90-day plan
+│   ├── box-list.md               curated boxes organized by skill (TJnull + phases)
 │   ├── box-tracker.md            log every box
 │   └── box-note-template.md      copy per box
 └── resources/

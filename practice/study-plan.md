@@ -17,7 +17,7 @@ A pass is built on **volume of boxes + solid methodology + clean notes**, not on
 - **Goal:** internalize the loop. Follow the [checklist](../01-methodology/checklist.md) every time.
 
 ## Phase 2 — Volume on standalones (weeks 5–8)
-- Grind the **TJnull OSCP-like list** (HTB + PG). See [`../resources/resources.md`](../resources/resources.md).
+- Grind the **[curated box list](box-list.md)** — boxes organized by skill/phase (built from the current TJnull list). See also [`../resources/resources.md`](../resources/resources.md).
 - Target **~40–60 boxes**. Easy → medium. Root every one, write notes for every one.
 - Rule: try **90 min unaided** before peeking at a hint; after rooting, read a writeup to learn the intended path and what you missed.
 - Practice **without Metasploit** (manual only) — that's the exam reality.
