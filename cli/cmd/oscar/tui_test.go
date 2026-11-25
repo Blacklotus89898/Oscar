@@ -153,7 +153,7 @@ func TestChecklistToggle(t *testing.T) {
 
 func TestExamModeHasNoClaude(t *testing.T) {
 	m := newTestTUI(t, workspace.ModeExam, "10.10.10.0/24")
-	if m.chat.a != nil || m.chat.show {
+	if m.chat.a != nil || m.chat.show || !strings.Contains(m.chat.off, "exam mode") {
 		t.Fatal("assistant available in exam mode")
 	}
 	press(m, "tab")

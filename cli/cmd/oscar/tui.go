@@ -749,7 +749,7 @@ func (m *tui) emptyView() string {
 		b.WriteString("  Press a to add a target.\n")
 	}
 	if m.w.Cfg.Mode == workspace.ModeExam {
-		b.WriteString("\n  " + examBadge.Render("EXAM") + " Claude is off. Re-read 00-exam-guide/exam-guide.md (d) for tool rules.\n")
+		b.WriteString("\n  " + examBadge.Render("EXAM") + " The assistant is off. Re-read 00-exam-guide/exam-guide.md (d) for tool rules.\n")
 	}
 	return b.String()
 }
@@ -853,7 +853,7 @@ const helpText = `Dashboard (vim keys)
   v           OpenVPN session (vpn_config in oscar.yaml)     H  serve www/ on LHOST:8000
   R           write report/report.md (draft: notes, flags, ports, timeline)
   1-9         jump to session N       r refresh     q quit
-  l / tab     Claude panel (lab/htb/ctf; never in exam mode)   x explain the last error
+  l / tab     assistant panel (Claude/OpenCode/any model; never in exam mode)   x explain the last error
 
 In a session every key goes to it. ctrl+] then: d back · n/p or 1-9 switch · l Claude · x explain screen
 

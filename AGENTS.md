@@ -28,7 +28,9 @@ internal/workspace  engagement dir, targets/challenges, flags + format, audit lo
 internal/nmap       nmap XML parse + merge
 internal/kb         this repo: checklist, docs/search, note template, box tracker
 internal/report     report.md draft
-internal/term, internal/assistant   from tether: pty sessions, chat-only Claude Code
+internal/term       from tether: pty sessions
+internal/assistant  chat-only Backend: claude (Claude Code CLI), opencode (OpenCode CLI), openai (HTTP)
+                    OPENCODE_BIN=... OPENCODE_MODEL=p/m go test -run Live ./internal/assistant/  (opt-in)
 ```
 
 ## Non-negotiables
@@ -40,7 +42,10 @@ internal/term, internal/assistant   from tether: pty sessions, chat-only Claude 
   or attack automation in `cli/`. oscar organises, records, scans with standard nmap presets and
   surfaces the user's own notes.
 - **Exam mode has no AI.** `Config.AssistantAllowed` must stay false for `exam` regardless of
-  config; pentest is opt-in. The assistant stays chat-only (`--tools ""`, no MCP).
+  config; pentest is opt-in. Every assistant backend stays chat-only: claude (`--tools ""`,
+  `--strict-mcp-config`), opencode (tools denied top-level *and* per agent in a config written to
+  a private dir, `--pure`, tool events abort), openai (never send `tools`). A new backend needs a
+  test proving the model is offered no tools.
 - **No engagement data in this repo.** Engagements live outside git (`oscar new` refuses a git
   work tree). Never commit flags, creds, scans or logs; test fixtures must be synthetic.
 - **The knowledge base is the user's.** `internal/kb` reads it; the only write is a row in

@@ -32,6 +32,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/Blacklotus89898/Oscar/cli/internal/assistant"
 	"github.com/Blacklotus89898/Oscar/cli/internal/scope"
 )
 
@@ -85,8 +86,10 @@ type Config struct {
 	Assistant  struct {
 		// Enabled: lab default true; exam always false (OffSec bans AI in the
 		// exam); pentest default false (client data must not leave the box).
-		Enabled *bool  `yaml:"enabled,omitempty"`
-		Model   string `yaml:"model,omitempty"`
+		Enabled *bool `yaml:"enabled,omitempty"`
+		// Which model: provider claude | opencode | openai, model, base_url,
+		// api_key_env, command (see package assistant). Empty = auto.
+		assistant.Config `yaml:",inline"`
 	} `yaml:"assistant"`
 	// MetasploitTarget is the one exam machine Metasploit was used on.
 	MetasploitTarget string `yaml:"metasploit_target,omitempty"`

@@ -226,7 +226,7 @@ func cmdNew(args []string) error {
 		fmt.Println("scope is empty: list targets in", w.Path("scope.txt"), "before adding them")
 	}
 	if w.Cfg.Mode == workspace.ModeExam {
-		fmt.Println("exam mode: the Claude panel is disabled (OffSec forbids AI tools during the exam).")
+		fmt.Println("exam mode: the assistant panel is disabled (OffSec forbids AI tools during the exam).")
 		fmt.Println("Re-read 00-exam-guide/exam-guide.md for the tool restrictions before you start.")
 	}
 	fmt.Println("run `oscar` for the dashboard")

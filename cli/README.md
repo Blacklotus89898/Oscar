@@ -37,20 +37,55 @@ enter shell · s scan · e notes · f flag · c checklist · d docs · / search 
   `practice/box-tracker.md`.
 - **Report draft.** `R` writes `report/report.md`: summary, then per target the flags, ports,
   your notes, screenshots and timeline. Convert it with `pandoc` to the PDF OffSec wants.
-- **Claude as a study partner** (lab/HTB/CTF only). A chat-only panel that sees the dashboard
+- **An AI study partner, any model** (lab/HTB/CTF only): Claude Code, OpenCode (any of its
+  providers) or any OpenAI-compatible API such as Ollama. See [Assistant](#assistant). A chat-only panel that sees the dashboard
   and your session screen but has no tools. It's told to teach with hints and point you to
   your own notes, not hand you answers. In **exam mode it doesn't exist**, because OffSec
   forbids AI tools in the exam. In pentest mode it's off unless you enable it.
 
 ## Modes
 
-| Mode | For | Flags | Claude |
+| Mode | For | Flags | Assistant |
 |---|---|---|---|
 | `lab` | PEN-200 labs, Proving Grounds | `local.txt`, `proof.txt` | on |
 | `exam` | the OSCP exam | `local.txt`, `proof.txt` | **never** |
 | `htb` | Hack The Box, TryHackMe | `user.txt`, `root.txt` | on |
 | `ctf` | jeopardy CTFs: challenges with category and points, scoreboard | `flag` (`flag{...}`) | on |
 | `pentest` | authorised client work | none | off unless enabled |
+
+## Assistant
+
+Model-agnostic. Set it in the engagement's `oscar.yaml`. Leave `provider` empty to use Claude
+Code if it's installed, otherwise OpenCode.
+
+```yaml
+assistant:
+  provider: claude            # Claude Code CLI, your Claude login
+  model: claude-sonnet-5-5    # optional
+```
+```yaml
+assistant:
+  provider: opencode          # OpenCode CLI: anything it's set up for
+  model: ollama/qwen3:14b     # provider/model as in `opencode models`
+```
+```yaml
+assistant:
+  provider: openai            # any OpenAI-compatible API
+  base_url: http://localhost:11434/v1   # Ollama; LM Studio :1234/v1, vLLM, OpenRouter…
+  model: qwen3:14b
+  api_key_env: OPENROUTER_API_KEY       # name of the env var, never the key itself
+```
+
+Every backend is **chat-only**, and that's enforced rather than assumed:
+- **Claude:** run with no tools and no MCP.
+- **OpenCode:** run from a private folder with a config oscar writes. Tools are denied both
+  at the top level and on the agent, because OpenCode falls back to its full-tool default
+  agent if the named one is missing. `--pure` keeps plugins out, and a tool event aborts
+  the turn.
+- **OpenAI:** the request never contains a tools list.
+
+The snapshot it sees never includes flag values or credentials. For `pentest` mode, a local
+model (Ollama) keeps client data on your network.
 
 ## Install & start
 
