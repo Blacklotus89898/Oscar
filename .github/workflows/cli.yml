@@ -1,0 +1,22 @@
+name: cli
+on:
+  push:
+    branches: [main]
+    paths: ["cli/**", "01-methodology/checklist.md", ".github/workflows/cli.yml"]
+  pull_request:
+    paths: ["cli/**", "01-methodology/checklist.md", ".github/workflows/cli.yml"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with: { go-version-file: cli/go.mod, cache-dependency-path: cli/go.sum }
+      - run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go vet ./...
+      - run: GOOS=windows go vet ./...
+      - run: go test -race ./...
+      - run: go build -o bin/ ./cmd/oscar
