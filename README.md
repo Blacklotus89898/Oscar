@@ -10,6 +10,20 @@ Everything here is for **authorized security testing and education only**: your 
 
 Open [`dashboard.html`](dashboard.html) in any browser (double-click it — no server needed) for a live tracker: box log, per-target checklist, exam-readiness meter, and a copy-paste cheatsheet. Progress saves in your browser; use its Export/Import buttons to back it up or move between machines.
 
+## ⌨️ Terminal workspace: `oscar`
+
+[`cli/`](cli/README.md) is a TUI for your attack box that uses this knowledge base while
+you work. It covers the OSCP labs and exam, Hack The Box and CTFs (challenges, categories
+and points). Each engagement gets its own folder. Scope is enforced, and every command is
+logged and every session recorded. Your checklist is ticked per target, and you can search
+these notes, run nmap scans that feed the dashboard, track flags, and get a report draft.
+In lab, HTB and CTF modes there's a Claude study-partner panel; exam mode removes it.
+
+```bash
+cd cli && go install ./cmd/oscar
+oscar new week-3 -mode htb -scope 10.10.10.0/24 && oscar add 10.10.10.3 Lame && oscar
+```
+
 ## 🗺️ How to use this repo
 
 1. **Start with the exam guide** — understand what you're training for before you grind boxes.
@@ -43,6 +57,7 @@ Open [`dashboard.html`](dashboard.html) in any browser (double-click it — no s
 Oscar/
 ├── README.md                     ← you are here
 ├── dashboard.html                ← interactive offline tracker (open in browser)
+├── cli/                          ← `oscar` terminal workspace (Go TUI; see cli/README.md)
 ├── 00-exam-guide/
 │   └── exam-guide.md             format · scoring · rules · exam-day strategy
 ├── 01-methodology/
