@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/Blacklotus89898/Oscar/cli/internal/workspace"
 )
 
-// The Claude panel: chat-only (no tools, no MCP), and it sees a snapshot of
+// The assistant panel (Claude, OpenCode or any OpenAI-compatible model): chat-only (no tools, no MCP), and it sees a snapshot of
 // the dashboard with each question. It is a tutor, not an autopilot. It never
 // exists in exam mode: OffSec prohibits AI assistance during the exam, and in
 // pentest mode it is off unless enabled (client data stays on the box).
@@ -28,7 +29,8 @@ type chatDoneMsg struct{ err error }
 type turn struct{ who, text string }
 
 type chat struct {
-	a        *assistant.Assistant
+	a        assistant.Backend
+	off      string // why a is nil
 	input    textinput.Model
 	vp       viewport.Model
 	turns    []turn
@@ -46,7 +48,7 @@ var (
 	panelFocus  = panelStyle.BorderForeground(lipgloss.Color("208"))
 )
 
-const welcome = `I'm Claude, your study partner. I see this dashboard (target, open ports, your checklist progress) and any session's screen, but I can't run anything.
+const welcome = `I'm your study partner. I see this dashboard (target, open ports, your checklist progress) and any session's screen, but I can't run anything.
 
 I'll explain what you're looking at, ask the question that gets you unstuck, and point you to the right page of your Oscar notes — not hand you the answer, because the exam won't.
 
@@ -60,19 +62,30 @@ Boundaries: only discuss the targets in the dashboard snapshot, which are in the
 
 func newChat(w *workspace.Workspace) chat {
 	ti := textinput.New()
-	ti.Placeholder = "ask Claude…"
+	ti.Placeholder = "ask…"
 	ti.Prompt = "› "
 	ti.CharLimit = 2000
 	c := chat{input: ti, vp: viewport.New(40, 10), turns: []turn{{"claude", welcome}}}
-	if !w.Cfg.AssistantAllowed() {
-		return c // a == nil: panel can't open
-	}
-	bin := assistant.Find()
-	if bin == "" {
+	switch {
+	case w.Cfg.Mode == workspace.ModeExam:
+		c.off = "exam mode: no AI assistance (OffSec rules)"
+		return c
+	case !w.Cfg.AssistantAllowed():
+		c.off = "the assistant is off in pentest mode; set assistant.enabled: true in oscar.yaml if your client allows it"
 		return c
 	}
-	dir := os.TempDir() // keep Claude Code's session files out of the engagement
-	c.a = &assistant.Assistant{Bin: bin, Dir: dir, Model: w.Cfg.Assistant.Model, System: assistantSystem}
+	// A private directory: some CLIs (OpenCode) read instruction files from
+	// their working directory, and none of them should see the engagement.
+	dir := filepath.Join(os.TempDir(), "oscar-assistant")
+	if d, err := os.UserCacheDir(); err == nil {
+		dir = filepath.Join(d, "oscar", "assistant")
+	}
+	b, err := assistant.New(w.Cfg.Assistant.Config, assistantSystem, dir)
+	if err != nil {
+		c.off = "assistant unavailable: " + err.Error()
+		return c
+	}
+	c.a = b
 	c.show = true
 	return c
 }
@@ -139,13 +152,7 @@ func orDash(s string) string {
 func (m *tui) askClaude(question string) tea.Cmd {
 	c := &m.chat
 	if c.a == nil {
-		if m.w.Cfg.Mode == workspace.ModeExam {
-			m.setMsg("exam mode: no AI assistance (OffSec rules)", true)
-		} else if !m.w.Cfg.AssistantAllowed() {
-			m.setMsg("Claude is off in pentest mode; set assistant.enabled: true in oscar.yaml if your client allows it", true)
-		} else {
-			m.setMsg("Claude Code CLI not found on PATH: install it and log in to use the panel", true)
-		}
+		m.setMsg(c.off, true)
 		return nil
 	}
 	if c.thinking {
@@ -359,7 +366,7 @@ func (m *tui) panelView() string {
 	if m.chat.focus {
 		style = panelFocus
 	}
-	title := claudeStyle.Render("Claude")
+	title := claudeStyle.Render(m.chat.a.Name())
 	switch {
 	case m.chat.focus && m.chat.insert:
 		title += dimStyle.Render("  INSERT · esc normal")
